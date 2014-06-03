@@ -4,12 +4,26 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
-public class MainActivity extends ActionBarActivity {
+import com.difusal.logic.Direction;
+import com.difusal.logic.Snake;
+
+public class MainActivity extends ActionBarActivity implements SwipeInterface {
+    SampleCanvas drawView;
+    private Snake snake;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        //setContentView(R.layout.activity_main);
+
+        snake = new Snake();
+
+        drawView = new SampleCanvas(this, snake);
+        setContentView(drawView);
+        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector(this);
+        drawView.setOnTouchListener(activitySwipeDetector);
     }
 
     @Override
@@ -26,5 +40,29 @@ public class MainActivity extends ActionBarActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void bottom2top(View v) {
+        snake.move(Direction.UP);
+        drawView.invalidate();
+    }
+
+    @Override
+    public void top2bottom(View v) {
+        snake.move(Direction.DOWN);
+        drawView.invalidate();
+    }
+
+    @Override
+    public void left2right(View v) {
+        snake.move(Direction.RIGHT);
+        drawView.invalidate();
+    }
+
+    @Override
+    public void right2left(View v) {
+        snake.move(Direction.LEFT);
+        drawView.invalidate();
     }
 }
