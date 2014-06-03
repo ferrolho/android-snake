@@ -6,6 +6,7 @@ import java.util.ArrayDeque;
 
 public class Snake {
     private ArrayDeque<Cell> cells;
+    private Cell previousTail;
     private Direction direction;
     private int moveDelay;
     private int life;
@@ -14,7 +15,7 @@ public class Snake {
         // clear cells container
         cells = new ArrayDeque<Cell>();
 
-        addCell(1, 1);
+        cells.addLast(new Cell(1, 1));
         direction = Direction.DOWN;
         moveDelay = 100;
         life = 100;
@@ -40,16 +41,20 @@ public class Snake {
                 break;
         }
 
-        // remove last cell
-        cells.removeLast();
+        // remove last cell and temporarily save it
+        previousTail = cells.removeLast();
     }
 
-    public void addCell(int x, int y) {
-        cells.addLast(new Cell(x, y));
+    public void incSize() {
+        cells.addLast(new Cell(previousTail));
     }
 
     public ArrayDeque<Cell> getCells() {
         return cells;
+    }
+
+    public Cell getHead() {
+        return cells.getFirst();
     }
 
     public int getCellsRadius() {

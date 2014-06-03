@@ -1,8 +1,6 @@
 package com.difusal.snake;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,28 +9,15 @@ import android.view.View;
 import com.difusal.logic.Direction;
 import com.difusal.logic.Snake;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class MainActivity extends ActionBarActivity implements SwipeInterface {
-    private RefreshHandler mRedrawHandler;
+    private Timer timer;
     private Snake snake;
     SampleCanvas drawView;
-    private long lastMoveTime;
-
-    class RefreshHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            updateGame();
-        }
-
-        public void sleep(long delayMillis) {
-            this.removeMessages(0);
-            sendMessageDelayed(obtainMessage(0), delayMillis);
-        }
-    }
 
     public void initGame() {
-        // create handler
-        mRedrawHandler = new RefreshHandler();
-
         // create snake
         snake = new Snake();
 
@@ -42,29 +27,45 @@ public class MainActivity extends ActionBarActivity implements SwipeInterface {
         ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector(this);
         drawView.setOnTouchListener(activitySwipeDetector);
 
-        // initialize last move time
-        lastMoveTime = 0;
-
-        // update game
-        updateGame();
+        // create timer
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                timerMethod();
+            }
+        }, 0, snake.getMoveDelay());
     }
 
-    public void updateGame() {
-        long currentTime = System.currentTimeMillis();
+    /**
+     * This method is called directly by the timer
+     * and runs in the same thread as the timer.
+     */
+    private void timerMethod() {
+        updateGame();
 
-        // if it is time to move the snake
-        if (currentTime - lastMoveTime > snake.getMoveDelay()) {
-            // move the snake
-            snake.move();
+        // call the method that will work with the UI
+        this.runOnUiThread(timerTick);
+    }
 
+    private Runnable timerTick = new Runnable() {
+        /**
+         * This method runs in the same thread as the UI.
+         * Do something to the UI thread here.
+         */
+        @Override
+        public void run() {
             // redraw view
             drawView.invalidate();
-
-            // update last move time
-            lastMoveTime = currentTime;
         }
+    };
 
-        mRedrawHandler.sleep(snake.getMoveDelay());
+    public void updateGame() {
+        // move the snake
+        snake.move();
+
+        if (snake.getHead().getLocation().y > 50)
+            snake.incSize();
     }
 
     @Override
