@@ -1,6 +1,8 @@
 package com.difusal.snake;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,20 +12,68 @@ import com.difusal.logic.Direction;
 import com.difusal.logic.Snake;
 
 public class MainActivity extends ActionBarActivity implements SwipeInterface {
-    SampleCanvas drawView;
+    private RefreshHandler mRedrawHandler;
     private Snake snake;
+    SampleCanvas drawView;
+    private long lastMoveTime;
+
+    class RefreshHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            updateGame();
+        }
+
+        public void sleep(long delayMillis) {
+            this.removeMessages(0);
+            sendMessageDelayed(obtainMessage(0), delayMillis);
+        }
+    }
+
+    public void initGame() {
+        // create handler
+        mRedrawHandler = new RefreshHandler();
+
+        // create snake
+        snake = new Snake();
+
+        // create canvas
+        drawView = new SampleCanvas(this, snake);
+        setContentView(drawView);
+        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector(this);
+        drawView.setOnTouchListener(activitySwipeDetector);
+
+        // initialize last move time
+        lastMoveTime = 0;
+
+        // update game
+        updateGame();
+    }
+
+    public void updateGame() {
+        long currentTime = System.currentTimeMillis();
+
+        // if it is time to move the snake
+        if (currentTime - lastMoveTime > snake.getMoveDelay()) {
+            // move the snake
+            snake.move();
+
+            // redraw view
+            drawView.invalidate();
+
+            // update last move time
+            lastMoveTime = currentTime;
+        }
+
+        mRedrawHandler.sleep(snake.getMoveDelay());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
 
-        snake = new Snake();
-
-        drawView = new SampleCanvas(this, snake);
-        setContentView(drawView);
-        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector(this);
-        drawView.setOnTouchListener(activitySwipeDetector);
+        // initialize game
+        initGame();
     }
 
     @Override
@@ -44,25 +94,25 @@ public class MainActivity extends ActionBarActivity implements SwipeInterface {
 
     @Override
     public void bottom2top(View v) {
-        snake.move(Direction.UP);
+        snake.setDirection(Direction.UP);
         drawView.invalidate();
     }
 
     @Override
     public void top2bottom(View v) {
-        snake.move(Direction.DOWN);
+        snake.setDirection(Direction.DOWN);
         drawView.invalidate();
     }
 
     @Override
     public void left2right(View v) {
-        snake.move(Direction.RIGHT);
+        snake.setDirection(Direction.RIGHT);
         drawView.invalidate();
     }
 
     @Override
     public void right2left(View v) {
-        snake.move(Direction.LEFT);
+        snake.setDirection(Direction.LEFT);
         drawView.invalidate();
     }
 }

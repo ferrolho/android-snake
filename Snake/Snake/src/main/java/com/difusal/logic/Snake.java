@@ -7,6 +7,7 @@ import java.util.ArrayDeque;
 public class Snake {
     private ArrayDeque<Cell> cells;
     private Direction direction;
+    private int moveDelay;
     private int life;
 
     public Snake() {
@@ -15,17 +16,15 @@ public class Snake {
 
         addCell(1, 1);
         direction = Direction.DOWN;
+        moveDelay = 100;
         life = 100;
     }
 
     public void move() {
-        move(direction);
-    }
-
-    public void move(Direction direction) {
-        this.direction = direction;
-
+        // get snake head location
         Point head = cells.getFirst().getLocation();
+
+        // add a new cell in front of the head in the current direction
         switch (direction) {
             case UP:
                 cells.addFirst(new Cell(head.x, head.y - 1));
@@ -40,6 +39,9 @@ public class Snake {
                 cells.addFirst(new Cell(head.x + 1, head.y));
                 break;
         }
+
+        // remove last cell
+        cells.removeLast();
     }
 
     public void addCell(int x, int y) {
@@ -52,6 +54,14 @@ public class Snake {
 
     public int getCellsRadius() {
         return cells.getFirst().getRadius();
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public int getMoveDelay() {
+        return moveDelay;
     }
 
     public boolean isDead() {
