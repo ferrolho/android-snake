@@ -35,6 +35,11 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
         activity.bottom2top(v);
     }
 
+    private void onClick(View v) {
+        Log.i(logTag, "onClick!");
+        activity.onClick(v);
+    }
+
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
@@ -48,6 +53,12 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
 
                 float deltaX = downX - upX;
                 float deltaY = downY - upY;
+
+                // click?
+                if (deltaX == 0 && deltaY == 0) {
+                    this.onClick(v);
+                    return true;
+                }
 
                 // swipe horizontal?
                 if (Math.abs(deltaX) > MIN_DISTANCE) {

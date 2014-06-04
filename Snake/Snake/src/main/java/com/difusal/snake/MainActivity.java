@@ -4,37 +4,28 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
-import com.difusal.logic.Direction;
-import com.difusal.logic.Snake;
-
-import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends ActionBarActivity implements SwipeInterface {
-    private Timer timer;
-    private Snake snake;
-    SampleCanvas drawView;
+public class MainActivity extends ActionBarActivity {
+    private SnakeView snakeView;
 
-    public void initGame() {
-        // create snake
-        snake = new Snake();
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //setContentView(R.layout.activity_main);
 
-        // create canvas
-        drawView = new SampleCanvas(this, snake);
-        setContentView(drawView);
-        ActivitySwipeDetector activitySwipeDetector = new ActivitySwipeDetector(this);
-        drawView.setOnTouchListener(activitySwipeDetector);
-
-        // create timer
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
+        // create timer task
+        TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 timerMethod();
             }
-        }, 0, snake.getMoveDelay());
+        };
+
+        // create snake view
+        snakeView = new SnakeView(this, timerTask);
+        setContentView(snakeView);
     }
 
     /**
@@ -42,7 +33,7 @@ public class MainActivity extends ActionBarActivity implements SwipeInterface {
      * and runs in the same thread as the timer.
      */
     private void timerMethod() {
-        updateGame();
+        snakeView.updateGame();
 
         // call the method that will work with the UI
         this.runOnUiThread(timerTick);
@@ -56,26 +47,9 @@ public class MainActivity extends ActionBarActivity implements SwipeInterface {
         @Override
         public void run() {
             // redraw view
-            drawView.invalidate();
+            snakeView.invalidate();
         }
     };
-
-    public void updateGame() {
-        // move the snake
-        snake.move();
-
-        if (snake.getHead().getLocation().y > 50)
-            snake.incSize();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_main);
-
-        // initialize game
-        initGame();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -91,29 +65,5 @@ public class MainActivity extends ActionBarActivity implements SwipeInterface {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    public void bottom2top(View v) {
-        snake.setDirection(Direction.UP);
-        drawView.invalidate();
-    }
-
-    @Override
-    public void top2bottom(View v) {
-        snake.setDirection(Direction.DOWN);
-        drawView.invalidate();
-    }
-
-    @Override
-    public void left2right(View v) {
-        snake.setDirection(Direction.RIGHT);
-        drawView.invalidate();
-    }
-
-    @Override
-    public void right2left(View v) {
-        snake.setDirection(Direction.LEFT);
-        drawView.invalidate();
     }
 }
