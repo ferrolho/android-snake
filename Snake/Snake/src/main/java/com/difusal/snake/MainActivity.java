@@ -15,7 +15,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
 
-        // create timer task
+
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {

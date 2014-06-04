@@ -21,6 +21,7 @@ import java.util.TimerTask;
 
 public class SnakeView extends View implements SwipeInterface {
     private int width, height;
+    private Timer timer;
     private Paint paint;
     private Point fieldDimensions;
     private Snake snake;
@@ -61,7 +62,7 @@ public class SnakeView extends View implements SwipeInterface {
                 startNewGame();
 
                 // create timer
-                Timer timer = new Timer();
+                timer = new Timer();
                 timer.schedule(timerTask, 0, snake.getMoveDelay());
 
                 // important step not to keep receiving callbacks: remove this listener
@@ -137,6 +138,9 @@ public class SnakeView extends View implements SwipeInterface {
 
             // increase snake speed
             snake.increaseSpeed();
+            // TODO: reschedule timer
+            //timer = new Timer();
+            //timer.schedule(timerTask, 0, snake.getMoveDelay());
         }
     }
 
