@@ -168,6 +168,14 @@ public class SnakeView extends View implements SwipeInterface {
 
         // draw snake
         drawSnake(canvas);
+
+        // display score
+        int textSize = 3 * cellsDiameter / 2;
+        paint.setTextSize(textSize);
+        paint.setColor(Color.BLACK);
+        canvas.drawText("Score: " + snake.getScore(), textSize / 4 + 2, textSize + 2, paint);
+        paint.setColor(Color.YELLOW);
+        canvas.drawText("Score: " + snake.getScore(), textSize / 4, textSize, paint);
     }
 
     private void drawApple(Canvas canvas) {
