@@ -134,6 +134,9 @@ public class SnakeView extends View implements SwipeInterface {
 
             // increase snake size
             snake.incSize();
+
+            // increase snake speed
+            snake.increaseSpeed();
         }
     }
 
