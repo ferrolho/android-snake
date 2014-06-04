@@ -51,11 +51,21 @@ public class Snake {
                 cells.addFirst(new Cell(head.x + 1, head.y, radius));
                 break;
         }
+
+        // log head current location
         head = getHead().getLocation();
         Log.v("Snake", "Head at: " + head.x + ", " + head.y);
 
         // remove last cell and temporarily save it
         previousTail = cells.removeLast();
+
+        checkIfAteItself();
+    }
+
+    private void checkIfAteItself() {
+        for (Cell cell : cells)
+            if (cell != getHead() && cell.getLocation().equals(getHead().getLocation()))
+                kill();
     }
 
     public void incSize() {
@@ -76,6 +86,11 @@ public class Snake {
 
     public int getMoveDelay() {
         return moveDelay;
+    }
+
+    public void increaseSpeed() {
+        if (moveDelay > 50)
+            moveDelay -= 10;
     }
 
     public boolean isDead() {

@@ -1,9 +1,10 @@
 package com.difusal.logic;
 
 import android.graphics.Color;
+import android.graphics.Point;
 
 public class GreenApple extends Apple {
-    public GreenApple(int fieldWidth, int fieldHeight, int radius) {
-        super(fieldWidth, fieldHeight, radius, 10, Color.GREEN);
+    public GreenApple(Point fieldDimensions, int radius) {
+        super(fieldDimensions, radius, 10, Color.GREEN);
     }
 }

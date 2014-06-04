@@ -82,7 +82,7 @@ public class SnakeView extends View implements SwipeInterface {
         snake = new Snake(cellsRadius);
 
         // create apple
-        apple = new GreenApple(fieldDimensions.x, fieldDimensions.y, cellsRadius);
+        apple = new GreenApple(fieldDimensions, cellsRadius);
     }
 
     public void updateGame() {
@@ -130,7 +130,7 @@ public class SnakeView extends View implements SwipeInterface {
             snake.incScore(apple.getScore());
 
             // generate new apple
-            apple.newRandomLocation(fieldDimensions.x, fieldDimensions.y);
+            apple.newRandomLocation(fieldDimensions);
 
             // increase snake size
             snake.incSize();
@@ -170,12 +170,7 @@ public class SnakeView extends View implements SwipeInterface {
         drawSnake(canvas);
 
         // display score
-        int textSize = 3 * cellsDiameter / 2;
-        paint.setTextSize(textSize);
-        paint.setColor(Color.BLACK);
-        canvas.drawText("Score: " + snake.getScore(), textSize / 4 + 2, textSize + 2, paint);
-        paint.setColor(Color.YELLOW);
-        canvas.drawText("Score: " + snake.getScore(), textSize / 4, textSize, paint);
+        drawScore(canvas);
     }
 
     private void drawApple(Canvas canvas) {
@@ -184,7 +179,7 @@ public class SnakeView extends View implements SwipeInterface {
         paint.setColor(Color.BLACK);
         canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, cellsRadius, paint);
 
-        paint.setColor(Color.GREEN);
+        paint.setColor(apple.getColor());
         canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, (float) (cellsRadius - cellsRadius / 4.0), paint);
     }
 
@@ -195,6 +190,17 @@ public class SnakeView extends View implements SwipeInterface {
             Point p = cell.getLocation();
             canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, cellsRadius, paint);
         }
+    }
+
+    private void drawScore(Canvas canvas) {
+        int textSize = 3 * cellsDiameter / 2;
+
+        paint.setTextSize(textSize);
+        paint.setColor(Color.BLACK);
+        canvas.drawText("Score: " + snake.getScore(), textSize / 4 + 2, textSize + 2, paint);
+
+        paint.setColor(Color.YELLOW);
+        canvas.drawText("Score: " + snake.getScore(), textSize / 4, textSize, paint);
     }
 
     @Override

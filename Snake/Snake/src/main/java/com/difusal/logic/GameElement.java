@@ -18,10 +18,10 @@ public class GameElement {
         return location;
     }
 
-    public void newRandomLocation(int fieldWidth, int fieldHeight) {
+    public void newRandomLocation(Point fieldDimensions) {
         Random random = new Random();
-        int x = random.nextInt(fieldWidth);
-        int y = random.nextInt(fieldHeight);
+        int x = random.nextInt(fieldDimensions.x - 2) + 1;
+        int y = random.nextInt(fieldDimensions.y - 2) + 1;
 
         Log.d("GameElement", "New apple at: " + x + ", " + y);
         location = new Point(x, y);
