@@ -78,7 +78,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         snake = new Snake(cellsRadius);
 
         // create apple
-        apple = new GreenApple(fieldDimensions, cellsRadius);
+        apple = new GreenApple(fieldDimensions, snake, cellsRadius);
 
         // reset highScoreUpdated flag
         highScoreUpdated = false;
@@ -118,6 +118,63 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         }
     }
 
+    @Override
+    public void bottom2top(View v) {
+        if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT)
+            snake.setDirection(Direction.UP);
+    }
+
+    @Override
+    public void top2bottom(View v) {
+        if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT)
+            snake.setDirection(Direction.DOWN);
+    }
+
+    @Override
+    public void left2right(View v) {
+        if (snake.getDirection() == Direction.UP || snake.getDirection() == Direction.DOWN)
+            snake.setDirection(Direction.RIGHT);
+    }
+
+    @Override
+    public void right2left(View v) {
+        if (snake.getDirection() == Direction.UP || snake.getDirection() == Direction.DOWN)
+            snake.setDirection(Direction.LEFT);
+    }
+
+    @Override
+    public void onClick(View v, int x, int y) {
+        // if snake is dead
+        if (snake.isDead()) {
+            Log.d(TAG, "Starting new game");
+
+            initGame();
+        } else {
+            if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT) {
+                // if snake is moving horizontally
+
+                // if touch anywhere above of the snake head
+                if (y < snake.getHead().getLocation().y * cellsDiameter)
+                    // move snake up
+                    snake.setDirection(Direction.UP);
+                else
+                    // move snake down
+                    snake.setDirection(Direction.DOWN);
+
+            } else {
+                // if snake is moving vertically
+
+                // if touch anywhere left of the snake head
+                if (x < snake.getHead().getLocation().x * cellsDiameter)
+                    // move snake left
+                    snake.setDirection(Direction.LEFT);
+                else
+                    // move snake right
+                    snake.setDirection(Direction.RIGHT);
+            }
+        }
+    }
+
     private void checkIfSnakeHitAnyWall() {
         // get snake head location
         Point head = snake.getHead().getLocation();
@@ -146,21 +203,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         if (snake.ate(apple)) {
             Log.d("Snake", "Apple has been eaten");
 
+            // increase snake size
+            snake.incSize();
+
+            // increase snake speed
+            snake.increaseSpeed();
+
+            // generate new apple
+            apple.newRandomLocation(fieldDimensions, snake);
+
             // update score
             snake.incScore(apple.getScore());
 
             // update high score
             if (snake.getScore() > highScore)
                 highScore = snake.getScore();
-
-            // generate new apple
-            apple.newRandomLocation(fieldDimensions);
-
-            // increase snake size
-            snake.incSize();
-
-            // increase snake speed
-            snake.increaseSpeed();
         }
     }
 
@@ -269,32 +326,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             paint.setColor(Color.YELLOW);
             canvas.drawText(text[i], leftPadding, (i + 1) * textSize + topPadding, paint);
         }
-    }
-
-    @Override
-    public void bottom2top(View v) {
-        snake.setDirection(Direction.UP);
-    }
-
-    @Override
-    public void top2bottom(View v) {
-        snake.setDirection(Direction.DOWN);
-    }
-
-    @Override
-    public void left2right(View v) {
-        snake.setDirection(Direction.RIGHT);
-    }
-
-    @Override
-    public void right2left(View v) {
-        snake.setDirection(Direction.LEFT);
-    }
-
-    @Override
-    public void onClick(View v) {
-        if (snake.isDead())
-            initGame();
     }
 
     @Override

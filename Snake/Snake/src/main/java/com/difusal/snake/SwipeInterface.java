@@ -11,5 +11,5 @@ public interface SwipeInterface {
 
     public void right2left(View v);
 
-    public void onClick(View v);
+    public void onClick(View v, int x, int y);
 }

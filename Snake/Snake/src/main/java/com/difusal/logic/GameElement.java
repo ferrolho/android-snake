@@ -1,9 +1,6 @@
 package com.difusal.logic;
 
 import android.graphics.Point;
-import android.util.Log;
-
-import java.util.Random;
 
 public class GameElement {
     protected Point location;
@@ -16,15 +13,6 @@ public class GameElement {
 
     public Point getLocation() {
         return location;
-    }
-
-    public void newRandomLocation(Point fieldDimensions) {
-        Random random = new Random();
-        int x = random.nextInt(fieldDimensions.x - 2) + 1;
-        int y = random.nextInt(fieldDimensions.y - 2) + 1;
-
-        Log.d("GameElement", "New apple at: " + x + ", " + y);
-        location = new Point(x, y);
     }
 
     public int getRadius() {
