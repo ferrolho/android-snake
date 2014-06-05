@@ -15,6 +15,9 @@ import android.view.View;
 import com.difusal.snake.ActivitySwipeDetector;
 import com.difusal.snake.SwipeInterface;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SwipeInterface {
     private static final String TAG = GamePanel.class.getSimpleName();
 
@@ -22,6 +25,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private MainThread thread;
     private Paint paint;
     private int tickCounter;
+    private Queue<Direction> directionsQueue;
 
     private Point fieldDimensions;
     private int cellsDiameter, cellsRadius;
@@ -50,6 +54,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // create paint
         paint = new Paint();
 
+        // create directions queue
+        directionsQueue = new LinkedList<Direction>();
+
         // make the GamePanel focusable so it can handle events
         setFocusable(true);
     }
@@ -60,6 +67,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private void initGame() {
         // reset tick counter
         tickCounter = 0;
+
+        // reset directions queue
+        directionsQueue.clear();
 
         Log.d("SnakeView", "View width: " + getWidth());
         Log.d("SnakeView", "View height: " + getHeight());
@@ -97,6 +107,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         // if snake is alive
         if (tickCounter % snake.getMoveDelay() == 0) {
+            // set snake direction
+            if (!directionsQueue.isEmpty())
+                snake.setDirection(directionsQueue.poll());
+
             // check if snake hit any wall
             checkIfSnakeHitAnyWall();
 
@@ -150,16 +164,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
             initGame();
         } else {
+            Direction direction;
+
             if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT) {
                 // if snake is moving horizontally
 
                 // if touch anywhere above of the snake head
                 if (y < snake.getHead().getLocation().y * cellsDiameter)
                     // move snake up
-                    snake.setDirection(Direction.UP);
+                    direction = Direction.UP;
                 else
                     // move snake down
-                    snake.setDirection(Direction.DOWN);
+                    direction = Direction.DOWN;
 
             } else {
                 // if snake is moving vertically
@@ -167,11 +183,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
                 // if touch anywhere left of the snake head
                 if (x < snake.getHead().getLocation().x * cellsDiameter)
                     // move snake left
-                    snake.setDirection(Direction.LEFT);
+                    direction = Direction.LEFT;
                 else
                     // move snake right
-                    snake.setDirection(Direction.RIGHT);
+                    direction = Direction.RIGHT;
             }
+
+            // add direction to queue of directions to be applied to the snake
+            directionsQueue.add(direction);
         }
     }
 
