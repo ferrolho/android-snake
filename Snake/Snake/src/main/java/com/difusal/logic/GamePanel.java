@@ -1,10 +1,12 @@
 package com.difusal.logic;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -16,6 +18,7 @@ import com.difusal.snake.SwipeInterface;
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SwipeInterface {
     private static final String TAG = GamePanel.class.getSimpleName();
 
+    private Context context;
     private MainThread thread;
     private Paint paint;
     private int tickCounter;
@@ -25,8 +28,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private Snake snake;
     private Apple apple;
 
+    private String highScoreKey = "highScore";
+    private long highScore;
+    private boolean highScoreUpdated;
+
     public GamePanel(Context context) {
         super(context);
+
+        // save context (necessary to save high score)
+        this.context = context;
 
         // add the callback (this) to the surface holder to intercept events
         getHolder().addCallback(this);
@@ -69,6 +79,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         // create apple
         apple = new GreenApple(fieldDimensions, cellsRadius);
+
+        // reset highScoreUpdated flag
+        highScoreUpdated = false;
+
+        // load high score
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        highScore = sharedPref.getLong(highScoreKey, 0);
     }
 
     /**
@@ -78,16 +95,26 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // increment tick counter
         tickCounter++;
 
-        // check if snake hit any wall
-        checkIfSnakeHitAnyWall();
-
+        // if snake is alive
         if (!snake.isDead()) {
-            if (tickCounter % snake.getMoveDelay() == 0)
+            if (tickCounter % snake.getMoveDelay() == 0) {
+                // check if snake hit any wall
+                checkIfSnakeHitAnyWall();
+
                 // move the snake
                 snake.move();
 
-            // check if snake ate apple
-            checkIfSnakeAteApple();
+                // check if snake ate apple
+                checkIfSnakeAteApple();
+            }
+        } else {
+            // if high score hasn't been updated
+            if (!highScoreUpdated) {
+                Log.d(TAG, "Updating high score");
+
+                saveHighScore();
+                highScoreUpdated = true;
+            }
         }
     }
 
@@ -122,6 +149,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             // update score
             snake.incScore(apple.getScore());
 
+            // update high score
+            if (snake.getScore() > highScore)
+                highScore = snake.getScore();
+
             // generate new apple
             apple.newRandomLocation(fieldDimensions);
 
@@ -131,6 +162,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             // increase snake speed
             snake.increaseSpeed();
         }
+    }
+
+    private void saveHighScore() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong(highScoreKey, highScore);
+        editor.commit();
     }
 
     /**
@@ -151,6 +189,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         // display score
         drawScore(canvas);
+
+        // if snake is dead
+        if (snake.isDead())
+            drawGameOverMessage(canvas);
     }
 
     private void drawBackground(Canvas canvas) {
@@ -199,18 +241,33 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawScore(Canvas canvas) {
-        String[] text = new String[]{"Best: 100", "Score: " + snake.getScore()};
+        String[] text = new String[]{"Best: " + highScore, "Score: " + snake.getScore()};
 
         int textSize = 3 * cellsDiameter / 2;
         int leftPadding = textSize / 4;
-        int topPadding = textSize;
 
         for (int i = 0; i < text.length; i++) {
             paint.setTextSize(textSize);
             paint.setColor(Color.BLACK);
-            canvas.drawText(text[i], leftPadding + 2, (i + 1) * topPadding + 2, paint);
+            canvas.drawText(text[i], leftPadding + 2, (i + 1) * textSize + 2, paint);
             paint.setColor(Color.YELLOW);
-            canvas.drawText(text[i], leftPadding, (i + 1) * topPadding, paint);
+            canvas.drawText(text[i], leftPadding, (i + 1) * textSize, paint);
+        }
+    }
+
+    private void drawGameOverMessage(Canvas canvas) {
+        String[] text = new String[]{"Game Over.", "Click to restart."};
+
+        int textSize = 3 * cellsDiameter / 2;
+        int leftPadding = textSize / 4;
+        int topPadding = textSize * 5;
+
+        for (int i = 0; i < text.length; i++) {
+            paint.setTextSize(textSize);
+            paint.setColor(Color.BLACK);
+            canvas.drawText(text[i], leftPadding + 2, (i + 1) * textSize + topPadding + 2, paint);
+            paint.setColor(Color.YELLOW);
+            canvas.drawText(text[i], leftPadding, (i + 1) * textSize + topPadding, paint);
         }
     }
 
