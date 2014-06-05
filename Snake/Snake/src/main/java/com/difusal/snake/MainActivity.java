@@ -2,54 +2,34 @@ package com.difusal.snake;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 
-import java.util.TimerTask;
+import com.difusal.logic.GamePanel;
+import com.difusal.logic.MainThread;
 
 public class MainActivity extends ActionBarActivity {
-    private SnakeView snakeView;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_main);
 
+        // request to turn the title OFF
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                timerMethod();
-            }
-        };
+        // make it full screen
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        // create snake view
-        snakeView = new SnakeView(this, timerTask);
-        setContentView(snakeView);
+        // set our GamePanel as the View
+        setContentView(new GamePanel(this));
+
+        Log.d(TAG, "View added");
     }
-
-    /**
-     * This method is called directly by the timer
-     * and runs in the same thread as the timer.
-     */
-    private void timerMethod() {
-        snakeView.updateGame();
-
-        // call the method that will work with the UI
-        this.runOnUiThread(timerTick);
-    }
-
-    private Runnable timerTick = new Runnable() {
-        /**
-         * This method runs in the same thread as the UI.
-         * Do something to the UI thread here.
-         */
-        @Override
-        public void run() {
-            // redraw view
-            snakeView.invalidate();
-        }
-    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -65,5 +45,24 @@ public class MainActivity extends ActionBarActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "Destroying...");
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "Stopping...");
+        super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "Pausing");
+        MainThread.setRunning(false);
+        super.onPause();
     }
 }

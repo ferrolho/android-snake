@@ -6,16 +6,18 @@ import android.util.Log;
 import java.util.ArrayDeque;
 
 public class Snake {
-    private int radius;
+    /**
+     * Number of speed steps.
+     * Speed will be increased in equal steps until full speed is not reached.
+     */
+    private final static int SPEED_STEPS = 10;
+
     private ArrayDeque<Cell> cells;
     private Cell previousTail;
-
-    public Direction getDirection() {
-        return direction;
-    }
+    private int radius;
 
     private Direction direction;
-    private int moveDelay;
+    private int initialMoveDelay, moveDelay;
     private int life;
     private int score;
 
@@ -25,9 +27,9 @@ public class Snake {
         // clear cells container
         cells = new ArrayDeque<Cell>();
 
-        cells.addLast(new Cell(1, 1, radius));
+        cells.addLast(new Cell(2, 2, radius));
         direction = Direction.RIGHT;
-        moveDelay = 200;
+        initialMoveDelay = moveDelay = MainThread.getMaxFps() / 4;
         life = 100;
         score = 0;
     }
@@ -68,6 +70,10 @@ public class Snake {
                 kill();
     }
 
+    public boolean ate(Apple apple) {
+        return getHead().getLocation().equals(apple.getLocation());
+    }
+
     public void incSize() {
         cells.addLast(new Cell(previousTail));
     }
@@ -80,6 +86,10 @@ public class Snake {
         return cells.getFirst();
     }
 
+    public Direction getDirection() {
+        return direction;
+    }
+
     public void setDirection(Direction direction) {
         this.direction = direction;
     }
@@ -89,8 +99,8 @@ public class Snake {
     }
 
     public void increaseSpeed() {
-        if (moveDelay > 50)
-            moveDelay -= 10;
+        if (moveDelay >= initialMoveDelay / (SPEED_STEPS / 2))
+            moveDelay -= initialMoveDelay / SPEED_STEPS;
     }
 
     public boolean isDead() {
@@ -103,10 +113,6 @@ public class Snake {
 
     public int getScore() {
         return score;
-    }
-
-    public boolean ate(Apple apple) {
-        return getHead().getLocation().equals(apple.getLocation());
     }
 
     public void incScore(int score) {
