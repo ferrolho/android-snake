@@ -96,24 +96,24 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         tickCounter++;
 
         // if snake is alive
-        if (!snake.isDead()) {
-            if (tickCounter % snake.getMoveDelay() == 0) {
-                // check if snake hit any wall
-                checkIfSnakeHitAnyWall();
+        if (tickCounter % snake.getMoveDelay() == 0) {
+            // check if snake hit any wall
+            checkIfSnakeHitAnyWall();
 
+            if (!snake.isDead()) {
                 // move the snake
                 snake.move();
 
                 // check if snake ate apple
                 checkIfSnakeAteApple();
-            }
-        } else {
-            // if high score hasn't been updated
-            if (!highScoreUpdated) {
-                Log.d(TAG, "Updating high score");
+            } else {
+                // if high score hasn't been updated
+                if (!highScoreUpdated) {
+                    Log.d(TAG, "Updating high score");
 
-                saveHighScore();
-                highScoreUpdated = true;
+                    saveHighScore();
+                    highScoreUpdated = true;
+                }
             }
         }
     }
