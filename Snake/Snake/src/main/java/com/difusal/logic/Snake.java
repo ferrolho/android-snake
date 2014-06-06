@@ -21,17 +21,23 @@ public class Snake {
     private int life;
     private int score;
 
-    public Snake(int radius) {
+    private boolean useBitmaps;
+
+    public Snake(int radius, boolean useBitmaps) {
         this.radius = radius;
 
         // clear cells container
         cells = new ArrayDeque<Cell>();
 
         cells.addLast(new Cell(2, 2, radius));
+        cells.addLast(new Cell(1, 2, radius));
+
         direction = Direction.RIGHT;
         initialMoveDelay = moveDelay = MainThread.getMaxFps() / 4;
         life = 100;
         score = 0;
+
+        this.useBitmaps = useBitmaps;
     }
 
     public void move() {
@@ -117,5 +123,9 @@ public class Snake {
 
     public void incScore(int score) {
         this.score += score;
+    }
+
+    public boolean isUsingBitmaps() {
+        return useBitmaps;
     }
 }

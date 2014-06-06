@@ -2,10 +2,14 @@ package com.difusal.logic;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -13,8 +17,10 @@ import android.view.SurfaceView;
 import android.view.View;
 
 import com.difusal.snake.ActivitySwipeDetector;
+import com.difusal.snake.R;
 import com.difusal.snake.SwipeInterface;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -35,6 +41,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private String highScoreKey = "highScore";
     private long highScore;
     private boolean highScoreUpdated;
+
+    private Bitmap head, body, curveBody, tail;
 
     public GamePanel(Context context) {
         super(context);
@@ -57,8 +65,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // create directions queue
         directionsQueue = new LinkedList<Direction>();
 
+        // load bitmaps
+        loadBitmaps();
+
         // make the GamePanel focusable so it can handle events
         setFocusable(true);
+    }
+
+    private void loadBitmaps() {
+        head = BitmapFactory.decodeResource(getResources(), R.drawable.head);
+        body = BitmapFactory.decodeResource(getResources(), R.drawable.body);
+        curveBody = BitmapFactory.decodeResource(getResources(), R.drawable.curve_body);
+        tail = BitmapFactory.decodeResource(getResources(), R.drawable.tail);
     }
 
     /**
@@ -85,7 +103,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         Log.d("MainActivity", "Field Dimensions: " + fieldWidth + "x" + fieldHeight);
 
         // create snake
-        snake = new Snake(cellsRadius);
+        // snake = new Snake(cellsRadius, (head != null && body != null && curveBody != null && tail != null));
+        snake = new Snake(cellsRadius, false);
 
         // create apple
         apple = new GreenApple(fieldDimensions, snake, cellsRadius);
@@ -308,11 +327,42 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawSnake(Canvas canvas) {
-        paint.setColor(Color.BLACK);
+        if (snake.isUsingBitmaps()) {
+            Iterator<Cell> it = snake.getCells().iterator();
 
-        for (Cell cell : snake.getCells()) {
-            Point p = cell.getLocation();
-            canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, cellsRadius, paint);
+            int iteration = 0;
+            while (it.hasNext()) {
+                Cell cell = it.next();
+                Point p = cell.getLocation();
+
+                Rect src = new Rect(0, 0, body.getWidth(), body.getHeight());
+
+                int x = p.x * cellsDiameter;
+                int y = p.y * cellsDiameter;
+                Rect dst = new Rect(x, y, x + cellsDiameter, y + cellsDiameter);
+
+                Bitmap bitmap = body;
+                if (iteration == 0) {
+                    bitmap = head;
+                } else if (!it.hasNext())
+                    bitmap = tail;
+
+                // draw bitmap
+                canvas.drawBitmap(bitmap, src, dst, paint);
+
+                // increment iteration number
+                iteration++;
+            }
+        } else {
+            paint.setColor(Color.BLACK);
+
+            for (Cell cell : snake.getCells()) {
+                Point p = cell.getLocation();
+
+                int x = cellsRadius + p.x * cellsDiameter;
+                int y = cellsRadius + p.y * cellsDiameter;
+                canvas.drawCircle(x, y, cellsRadius, paint);
+            }
         }
     }
 

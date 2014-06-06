@@ -17,7 +17,6 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_main);
 
         // request to turn the title OFF
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -25,7 +24,14 @@ public class MainActivity extends ActionBarActivity {
         // make it full screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        /*
+        //setContentView(R.layout.activity_main);
+
         // set our GamePanel as the View
+        FrameLayout gamePanel = (FrameLayout) findViewById(R.id.gamePanel);
+        gamePanel.addView(new GamePanel(this));
+        */
+
         setContentView(new GamePanel(this));
 
         Log.d(TAG, "View added");

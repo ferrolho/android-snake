@@ -1,7 +1,7 @@
 package com.difusal.logic;
 
 public enum Direction {
-    UP(0), DOWN(1), LEFT(2), RIGHT(3);
+    RIGHT(0), UP(1), LEFT(2), DOWN(3);
 
     private final int value;
 
