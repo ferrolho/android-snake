@@ -319,15 +319,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             // set speed needs to be incremented flag
             snake.enableSpeedNeedsToBeIncrementedFlag();
 
-            // generate new apple
-            generateNewApple();
-
             // update score
             snake.incScore(apple.getScore());
 
             // update high score
             if (snake.getScore() > highScore)
                 highScore = snake.getScore();
+
+            // generate new apple
+            generateNewApple();
         }
     }
 
@@ -397,7 +397,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawApple(Canvas canvas) {
-        Bitmap bitmap = null;
+        Bitmap bitmap;
 
         switch (apple.getColor()) {
             case Color.GREEN:
@@ -408,6 +408,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
                 break;
             case Color.YELLOW:
                 bitmap = yellowAppleCell;
+                break;
+            default:
+                bitmap = borderCell;
                 break;
         }
 
