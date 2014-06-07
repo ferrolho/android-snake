@@ -420,7 +420,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawBackground(Canvas canvas) {
-        int bgColor = snake.isDead() ? Color.RED : Color.rgb(68, 158, 44);
+        int bgColor = snake.isDead() ? Color.rgb(204, 0, 0) : Color.rgb(68, 158, 44);
         paint.setColor(bgColor);
 
         canvas.drawRect(0, 0, fieldDimensions.x * cellsDiameter, fieldDimensions.y * cellsDiameter, paint);
@@ -531,7 +531,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         int textSize = 3 * cellsDiameter / 2;
         int leftPadding = cellsDiameter + textSize / 4;
-        int topPadding = textSize * 5;
+        int topPadding = getHeight() / 2 + cellsDiameter * text.length;
 
         for (int i = 0; i < text.length; i++) {
             paint.setTextSize(textSize);
