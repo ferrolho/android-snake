@@ -7,7 +7,8 @@ import android.view.View;
 public class ActivitySwipeDetector implements View.OnTouchListener {
     static final String logTag = "ActivitySwipeDetector";
     private SwipeInterface activity;
-    static final int MIN_DISTANCE = 100;
+    static final int MIN_SWIPE_DISTANCE = 100;
+    static final int MAX_CLICK_TOLERANCE = 50;
     private float downX;
     private float downY;
 
@@ -54,13 +55,13 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
                 float deltaY = downY - upY;
 
                 // click?
-                if (deltaX < MIN_DISTANCE && deltaY < MIN_DISTANCE) {
+                if (deltaX <= MAX_CLICK_TOLERANCE && deltaY <= MAX_CLICK_TOLERANCE) {
                     this.onClick(v, (int) upX, (int) upY);
                     return true;
                 }
 
                 // swipe horizontal?
-                if (Math.abs(deltaX) > MIN_DISTANCE) {
+                if (Math.abs(deltaX) > MIN_SWIPE_DISTANCE) {
                     // left or right
                     if (deltaX < 0) {
                         this.onLeftToRightSwipe(v);
@@ -71,11 +72,11 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
                         return true;
                     }
                 } else {
-                    Log.i(logTag, "Swipe was only " + Math.abs(deltaX) + " long, need at least " + MIN_DISTANCE);
+                    Log.i(logTag, "Horizontal swipe was only " + Math.abs(deltaX) + " long, need at least " + MIN_SWIPE_DISTANCE);
                 }
 
                 // swipe vertical?
-                if (Math.abs(deltaY) > MIN_DISTANCE) {
+                if (Math.abs(deltaY) > MIN_SWIPE_DISTANCE) {
                     // top or down
                     if (deltaY < 0) {
                         this.onTopToBottomSwipe(v);
@@ -86,8 +87,7 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
                         return true;
                     }
                 } else {
-                    Log.i(logTag, "Swipe was only " + Math.abs(deltaX) + " long, need at least " + MIN_DISTANCE);
-                    v.performClick();
+                    Log.i(logTag, "Vertical swipe was only " + Math.abs(deltaX) + " long, need at least " + MIN_SWIPE_DISTANCE);
                 }
             }
         }

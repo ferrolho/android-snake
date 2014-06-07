@@ -41,6 +41,7 @@ public class MainThread extends Thread {
         super();
         this.surfaceHolder = surfaceHolder;
         this.gamePanel = gamePanel;
+        running = true;
     }
 
     @Override
@@ -106,7 +107,7 @@ public class MainThread extends Thread {
                     }
 
                     if (framesSkipped > 0)
-                        Log.d(TAG, "Skipped:" + framesSkipped);
+                        Log.v(TAG, "Skipped " + framesSkipped + "frames");
                 }
             } finally {
                 // in case of an exception the surface is not left in an inconsistent state

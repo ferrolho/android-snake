@@ -66,6 +66,34 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         setFocusable(true);
     }
 
+    @Override
+    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        // initialize game
+        initGame();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        Log.d(TAG, "Surface is being destroyed");
+
+        // tell the thread to shut down and wait for it to finish. this is a clean shutdown
+        boolean retry = true;
+        while (retry) {
+            try {
+                thread.join();
+                retry = false;
+            } catch (InterruptedException e) {
+                // try again shutting down the thread
+            }
+        }
+
+        Log.d(TAG, "Thread was shut down cleanly");
+    }
+
     private void loadBitmaps() {
         borderCell = BitmapFactory.decodeResource(getResources(), R.drawable.border_cell);
         snakeCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_cell);
@@ -75,7 +103,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     /**
      * Game initialize method.
      */
-    private void initGame() {
+    public void initGame() {
         // reset tick counter
         tickCounter = 0;
 
@@ -109,8 +137,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         highScore = sharedPref.getLong(highScoreKey, 0);
 
-        // create the game loop thread
+        // create and start the game loop thread
         thread = new MainThread(getHolder(), this);
+        thread.start();
     }
 
     /**
@@ -177,7 +206,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // if snake is dead
         if (snake.isDead()) {
             Log.d(TAG, "Starting new game");
-
             initGame();
         } else {
             Direction direction = directionsQueue.isEmpty() ? snake.getDirection() : directionsQueue.getLast();
@@ -399,40 +427,5 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             paint.setColor(Color.YELLOW);
             canvas.drawText(text[i], leftPadding, (i + 1) * textSize + topPadding, paint);
         }
-    }
-
-    @Override
-    public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        // initialize game
-        initGame();
-
-        // if first time thread starts
-        if (thread.getState() == Thread.State.TERMINATED)
-            thread = new MainThread(getHolder(), this);
-
-        MainThread.setRunning(true);
-        thread.start();
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i2, int i3) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        Log.d(TAG, "Surface is being destroyed");
-
-        // tell the thread to shut down and wait for it to finish. this is a clean shutdown
-        boolean retry = true;
-        while (retry) {
-            try {
-                thread.join();
-                retry = false;
-            } catch (InterruptedException e) {
-                // try again shutting down the thread
-            }
-        }
-
-        Log.d(TAG, "Thread was shut down cleanly");
     }
 }

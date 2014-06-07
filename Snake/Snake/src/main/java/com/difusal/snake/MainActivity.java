@@ -14,6 +14,8 @@ import com.difusal.logic.MainThread;
 public class MainActivity extends ActionBarActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
+    private GamePanel gamePanel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +34,8 @@ public class MainActivity extends ActionBarActivity {
         gamePanel.addView(new GamePanel(this));
         */
 
-        setContentView(new GamePanel(this));
+        gamePanel = new GamePanel(this);
+        setContentView(gamePanel);
 
         Log.d(TAG, "View added");
     }
@@ -54,9 +57,18 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        Log.d(TAG, "Destroying...");
-        super.onDestroy();
+    public void onRestart() {
+        Log.d(TAG, "Restarting...");
+        if (gamePanel != null)
+            gamePanel.initGame();
+        super.onRestart();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "Pausing...");
+        MainThread.setRunning(false);
+        super.onPause();
     }
 
     @Override
@@ -66,9 +78,8 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onPause() {
-        Log.d(TAG, "Pausing");
-        MainThread.setRunning(false);
-        super.onPause();
+    protected void onDestroy() {
+        Log.d(TAG, "Destroying...");
+        super.onDestroy();
     }
 }
