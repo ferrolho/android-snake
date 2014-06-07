@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
@@ -20,9 +19,7 @@ import com.difusal.snake.ActivitySwipeDetector;
 import com.difusal.snake.R;
 import com.difusal.snake.SwipeInterface;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.ArrayDeque;
 
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SwipeInterface {
     private static final String TAG = GamePanel.class.getSimpleName();
@@ -31,7 +28,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private MainThread thread;
     private Paint paint;
     private int tickCounter;
-    private Queue<Direction> directionsQueue;
+    private ArrayDeque<Direction> directionsQueue;
 
     private Point fieldDimensions;
     private int cellsDiameter, cellsRadius;
@@ -42,7 +39,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private long highScore;
     private boolean highScoreUpdated;
 
-    private Bitmap head, body, curveBody, tail;
+    private Bitmap borderCell, snakeCell, appleCell;
 
     public GamePanel(Context context) {
         super(context);
@@ -56,14 +53,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // set on touch listener
         setOnTouchListener(new ActivitySwipeDetector(this));
 
-        // create the game loop thread
-        thread = new MainThread(getHolder(), this);
-
         // create paint
         paint = new Paint();
 
         // create directions queue
-        directionsQueue = new LinkedList<Direction>();
+        directionsQueue = new ArrayDeque<Direction>();
 
         // load bitmaps
         loadBitmaps();
@@ -73,10 +67,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void loadBitmaps() {
-        head = BitmapFactory.decodeResource(getResources(), R.drawable.head);
-        body = BitmapFactory.decodeResource(getResources(), R.drawable.body);
-        curveBody = BitmapFactory.decodeResource(getResources(), R.drawable.curve_body);
-        tail = BitmapFactory.decodeResource(getResources(), R.drawable.tail);
+        borderCell = BitmapFactory.decodeResource(getResources(), R.drawable.border_cell);
+        snakeCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_cell);
+        appleCell = BitmapFactory.decodeResource(getResources(), R.drawable.apple_cell);
     }
 
     /**
@@ -103,8 +96,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         Log.d("MainActivity", "Field Dimensions: " + fieldWidth + "x" + fieldHeight);
 
         // create snake
-        // snake = new Snake(cellsRadius, (head != null && body != null && curveBody != null && tail != null));
-        snake = new Snake(cellsRadius, false);
+        snake = new Snake(cellsRadius, (borderCell != null && snakeCell != null && appleCell != null));
+        //snake = new Snake(cellsRadius, false);
 
         // create apple
         apple = new GreenApple(fieldDimensions, snake, cellsRadius);
@@ -115,6 +108,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // load high score
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         highScore = sharedPref.getLong(highScoreKey, 0);
+
+        // create the game loop thread
+        thread = new MainThread(getHolder(), this);
     }
 
     /**
@@ -126,9 +122,34 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         // if snake is alive
         if (tickCounter % snake.getMoveDelay() == 0) {
+            // increase snake speed if needed
+            if (snake.speedNeedsToBeIncremented())
+                snake.increaseSpeed();
+
             // set snake direction
-            if (!directionsQueue.isEmpty())
-                snake.setDirection(directionsQueue.poll());
+            boolean done = false;
+            while (!directionsQueue.isEmpty() && !done) {
+                Direction direction = directionsQueue.poll();
+
+                switch (direction) {
+                    case UP:
+                    case DOWN:
+                        if (snake.isMovingHorizontally()) {
+                            snake.setDirection(direction);
+                            Log.d(TAG, "Consumed direction " + direction.getString() + " from queue");
+                            done = true;
+                        }
+                        break;
+                    case RIGHT:
+                    case LEFT:
+                        if (snake.isMovingVertically()) {
+                            snake.setDirection(direction);
+                            Log.d(TAG, "Consumed direction " + direction.getString() + " from queue");
+                            done = true;
+                        }
+                        break;
+                }
+            }
 
             // check if snake hit any wall
             checkIfSnakeHitAnyWall();
@@ -152,30 +173,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     @Override
-    public void bottom2top(View v) {
-        if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT)
-            snake.setDirection(Direction.UP);
-    }
-
-    @Override
-    public void top2bottom(View v) {
-        if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT)
-            snake.setDirection(Direction.DOWN);
-    }
-
-    @Override
-    public void left2right(View v) {
-        if (snake.getDirection() == Direction.UP || snake.getDirection() == Direction.DOWN)
-            snake.setDirection(Direction.RIGHT);
-    }
-
-    @Override
-    public void right2left(View v) {
-        if (snake.getDirection() == Direction.UP || snake.getDirection() == Direction.DOWN)
-            snake.setDirection(Direction.LEFT);
-    }
-
-    @Override
     public void onClick(View v, int x, int y) {
         // if snake is dead
         if (snake.isDead()) {
@@ -183,34 +180,63 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
             initGame();
         } else {
-            Direction direction;
+            Direction direction = directionsQueue.isEmpty() ? snake.getDirection() : directionsQueue.getLast();
 
-            if (snake.getDirection() == Direction.LEFT || snake.getDirection() == Direction.RIGHT) {
+            if (direction.isHorizontal()) {
                 // if snake is moving horizontally
 
                 // if touch anywhere above of the snake head
-                if (y < snake.getHead().getLocation().y * cellsDiameter)
+                if (y < snake.getHead().getLocation().y * cellsDiameter) {
                     // move snake up
                     direction = Direction.UP;
-                else
+                    Log.d(TAG, "Added direction UP to queue");
+                } else {
                     // move snake down
                     direction = Direction.DOWN;
-
+                    Log.d(TAG, "Added direction DOWN to queue");
+                }
             } else {
                 // if snake is moving vertically
 
                 // if touch anywhere left of the snake head
-                if (x < snake.getHead().getLocation().x * cellsDiameter)
+                if (x < snake.getHead().getLocation().x * cellsDiameter) {
                     // move snake left
                     direction = Direction.LEFT;
-                else
+                    Log.d(TAG, "Added direction LEFT to queue");
+                } else {
                     // move snake right
                     direction = Direction.RIGHT;
+                    Log.d(TAG, "Added direction RIGHT to queue");
+                }
             }
 
             // add direction to queue of directions to be applied to the snake
             directionsQueue.add(direction);
         }
+    }
+
+    @Override
+    public void bottom2top(View v) {
+        if (snake.getDirection().isHorizontal())
+            snake.setDirection(Direction.UP);
+    }
+
+    @Override
+    public void top2bottom(View v) {
+        if (snake.getDirection().isHorizontal())
+            snake.setDirection(Direction.DOWN);
+    }
+
+    @Override
+    public void left2right(View v) {
+        if (snake.getDirection().isVertical())
+            snake.setDirection(Direction.RIGHT);
+    }
+
+    @Override
+    public void right2left(View v) {
+        if (snake.getDirection().isVertical())
+            snake.setDirection(Direction.LEFT);
     }
 
     private void checkIfSnakeHitAnyWall() {
@@ -244,8 +270,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             // increase snake size
             snake.incSize();
 
-            // increase snake speed
-            snake.increaseSpeed();
+            // set speed needs to be incremented flag
+            snake.enableSpeedNeedsToBeIncrementedFlag();
 
             // generate new apple
             apple.newRandomLocation(fieldDimensions, snake);
@@ -291,68 +317,47 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawBackground(Canvas canvas) {
-        int bgColor = snake.isDead() ? Color.RED : Color.LTGRAY;
+        int bgColor = snake.isDead() ? Color.RED : Color.rgb(68, 158, 44);
         paint.setColor(bgColor);
 
         canvas.drawRect(0, 0, fieldDimensions.x * cellsDiameter, fieldDimensions.y * cellsDiameter, paint);
     }
 
+    private void drawCell(Canvas canvas, Point p, Bitmap bitmap) {
+        Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        int x = p.x * cellsDiameter;
+        int y = p.y * cellsDiameter;
+        Rect dst = new Rect(x, y, x + cellsDiameter, y + cellsDiameter);
+
+        // draw bitmap
+        canvas.drawBitmap(bitmap, src, dst, paint);
+    }
+
     private void drawBoardLimits(Canvas canvas) {
         paint.setColor(Color.DKGRAY);
+
+        // draw top  and bottom border
+        for (int i = 0; i < fieldDimensions.x; i++) {
+            drawCell(canvas, new Point(i, 0), borderCell);
+            drawCell(canvas, new Point(i, fieldDimensions.y - 1), borderCell);
+        }
+
+        // fill first and last column
         for (int i = 0; i < fieldDimensions.y; i++) {
-            // fill first and last cell
-            canvas.drawRect(0, i * cellsDiameter, cellsDiameter, (i + 1) * cellsDiameter, paint);
-            canvas.drawRect((fieldDimensions.x - 1) * cellsDiameter, i * cellsDiameter, getWidth(), (i + 1) * cellsDiameter, paint);
-
-            // if first line, draw every cell
-            if (i == 0)
-                for (int j = 0; j < fieldDimensions.x; j++)
-                    canvas.drawRect(j * cellsDiameter, i * cellsDiameter, (j + 1) * cellsDiameter, (i + 1) * cellsDiameter, paint);
-
-            // if last line, draw every cell with y correction
-            if (i == fieldDimensions.y - 1)
-                for (int j = 0; j < fieldDimensions.x; j++)
-                    canvas.drawRect(j * cellsDiameter, i * cellsDiameter, (j + 1) * cellsDiameter, getHeight(), paint);
+            drawCell(canvas, new Point(0, i), borderCell);
+            drawCell(canvas, new Point(fieldDimensions.x - 1, i), borderCell);
         }
     }
 
     private void drawApple(Canvas canvas) {
-        Point p = apple.getLocation();
-
-        paint.setColor(Color.BLACK);
-        canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, cellsRadius, paint);
-
-        paint.setColor(apple.getColor());
-        canvas.drawCircle(cellsRadius + p.x * cellsDiameter, cellsRadius + p.y * cellsDiameter, (float) (cellsRadius - cellsRadius / 4.0), paint);
+        drawCell(canvas, apple.getLocation(), appleCell);
     }
 
     private void drawSnake(Canvas canvas) {
         if (snake.isUsingBitmaps()) {
-            Iterator<Cell> it = snake.getCells().iterator();
-
-            int iteration = 0;
-            while (it.hasNext()) {
-                Cell cell = it.next();
-                Point p = cell.getLocation();
-
-                Rect src = new Rect(0, 0, body.getWidth(), body.getHeight());
-
-                int x = p.x * cellsDiameter;
-                int y = p.y * cellsDiameter;
-                Rect dst = new Rect(x, y, x + cellsDiameter, y + cellsDiameter);
-
-                Bitmap bitmap = body;
-                if (iteration == 0) {
-                    bitmap = head;
-                } else if (!it.hasNext())
-                    bitmap = tail;
-
-                // draw bitmap
-                canvas.drawBitmap(bitmap, src, dst, paint);
-
-                // increment iteration number
-                iteration++;
-            }
+            for (Cell cell : snake.getCells())
+                drawCell(canvas, cell.getLocation(), snakeCell);
         } else {
             paint.setColor(Color.BLACK);
 
@@ -370,14 +375,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         String[] text = new String[]{"Best: " + highScore, "Score: " + snake.getScore()};
 
         int textSize = 3 * cellsDiameter / 2;
-        int leftPadding = textSize / 4;
+        int leftPadding = cellsDiameter + textSize / 4;
+        int topPadding = cellsDiameter;
 
         for (int i = 0; i < text.length; i++) {
             paint.setTextSize(textSize);
-            paint.setColor(Color.BLACK);
-            canvas.drawText(text[i], leftPadding + 2, (i + 1) * textSize + 2, paint);
-            paint.setColor(Color.YELLOW);
-            canvas.drawText(text[i], leftPadding, (i + 1) * textSize, paint);
+            paint.setColor(Color.rgb(150, 0, 150));
+            canvas.drawText(text[i], leftPadding, topPadding + (i + 1) * textSize, paint);
         }
     }
 
@@ -399,15 +403,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
+        // initialize game
+        initGame();
+
         // if first time thread starts
         if (thread.getState() == Thread.State.TERMINATED)
             thread = new MainThread(getHolder(), this);
 
         MainThread.setRunning(true);
         thread.start();
-
-        // initialize game
-        initGame();
     }
 
     @Override

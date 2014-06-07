@@ -10,14 +10,17 @@ public class Snake {
      * Number of speed steps.
      * Speed will be increased in equal steps until full speed is not reached.
      */
-    private final static int SPEED_STEPS = 10;
+    private final static int SPEED_STEPS = 30;
 
     private ArrayDeque<Cell> cells;
     private Cell previousTail;
     private int radius;
 
+    private double finalMoveDelay;
+    private double moveDelay, moveDelayInc;
+    private boolean speedNeedsToBeIncremented;
+
     private Direction direction;
-    private int initialMoveDelay, moveDelay;
     private int life;
     private int score;
 
@@ -29,11 +32,16 @@ public class Snake {
         // clear cells container
         cells = new ArrayDeque<Cell>();
 
+        cells.addLast(new Cell(3, 2, radius));
         cells.addLast(new Cell(2, 2, radius));
         cells.addLast(new Cell(1, 2, radius));
 
+        double initialMoveDelay = moveDelay = MainThread.getMaxFps() / 4;
+        finalMoveDelay = initialMoveDelay / 3;
+        moveDelayInc = (initialMoveDelay - finalMoveDelay) / SPEED_STEPS;
+        speedNeedsToBeIncremented = false;
+
         direction = Direction.RIGHT;
-        initialMoveDelay = moveDelay = MainThread.getMaxFps() / 4;
         life = 100;
         score = 0;
 
@@ -100,13 +108,33 @@ public class Snake {
         this.direction = direction;
     }
 
+    public boolean isMovingHorizontally() {
+        return direction.isHorizontal();
+    }
+
+    public boolean isMovingVertically() {
+        return !isMovingHorizontally();
+    }
+
     public int getMoveDelay() {
-        return moveDelay;
+        return (int) Math.round(moveDelay);
+    }
+
+    public boolean speedNeedsToBeIncremented() {
+        return speedNeedsToBeIncremented;
+    }
+
+    public void enableSpeedNeedsToBeIncrementedFlag() {
+        speedNeedsToBeIncremented = true;
     }
 
     public void increaseSpeed() {
-        if (moveDelay >= initialMoveDelay / (SPEED_STEPS / 2))
-            moveDelay -= initialMoveDelay / SPEED_STEPS;
+        moveDelay -= moveDelayInc;
+
+        if (moveDelay < finalMoveDelay)
+            moveDelay = finalMoveDelay;
+
+        speedNeedsToBeIncremented = false;
     }
 
     public boolean isDead() {
