@@ -3,8 +3,6 @@ package com.difusal.snake;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -40,6 +38,7 @@ public class MainActivity extends ActionBarActivity {
         Log.d(TAG, "View added");
     }
 
+    /*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -55,12 +54,15 @@ public class MainActivity extends ActionBarActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+    */
 
     @Override
     public void onRestart() {
         Log.d(TAG, "Restarting...");
+
         if (gamePanel != null)
             gamePanel.initGame();
+
         super.onRestart();
     }
 

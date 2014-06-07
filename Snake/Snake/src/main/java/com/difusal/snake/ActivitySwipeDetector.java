@@ -17,27 +17,27 @@ public class ActivitySwipeDetector implements View.OnTouchListener {
     }
 
     public void onRightToLeftSwipe(View v) {
-        Log.i(logTag, "RightToLeftSwipe!");
+        Log.v(logTag, "RightToLeftSwipe!");
         activity.right2left(v);
     }
 
     public void onLeftToRightSwipe(View v) {
-        Log.i(logTag, "LeftToRightSwipe!");
+        Log.v(logTag, "LeftToRightSwipe!");
         activity.left2right(v);
     }
 
     public void onTopToBottomSwipe(View v) {
-        Log.i(logTag, "onTopToBottomSwipe!");
+        Log.v(logTag, "onTopToBottomSwipe!");
         activity.top2bottom(v);
     }
 
     public void onBottomToTopSwipe(View v) {
-        Log.i(logTag, "onBottomToTopSwipe!");
+        Log.v(logTag, "onBottomToTopSwipe!");
         activity.bottom2top(v);
     }
 
     private void onClick(View v, int x, int y) {
-        Log.i(logTag, "onClick!");
+        Log.v(logTag, "onClick!");
         activity.onClick(v, x, y);
     }
 

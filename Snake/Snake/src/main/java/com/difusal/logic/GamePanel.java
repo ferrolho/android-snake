@@ -28,6 +28,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private static final int RED_APPLE_PERCENTAGE = 20;
     private static final int YELLOW_APPLE_PERCENTAGE = 5;
 
+    private static final int CLOCK_PERCENTAGE = 2;
+    private static final int SHIELD_PERCENTAGE = 1;
+
     private Context context;
     private MainThread thread;
     private Paint paint;
@@ -38,12 +41,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private int cellsDiameter, cellsRadius;
     private Snake snake;
     private Apple apple;
+    private SpecialElement specialElement;
 
     private String highScoreKey = "highScore";
     private long highScore;
     private boolean highScoreUpdated;
 
-    private Bitmap borderCell, snakeCell;
+    private Bitmap borderCell, snakeCell, snakeShieldedCell;
     private Bitmap greenAppleCell, redAppleCell, yellowAppleCell;
     private Bitmap clockCell, shieldCell;
 
@@ -103,6 +107,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private void loadBitmaps() {
         borderCell = BitmapFactory.decodeResource(getResources(), R.drawable.border_cell);
         snakeCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_cell);
+        snakeShieldedCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_shielded_cell);
 
         greenAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.green_apple_cell);
         redAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.red_apple_cell);
@@ -153,18 +158,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         thread.start();
     }
 
-    private void generateNewApple() {
-        Random random = new Random();
-        int num = random.nextInt(100) + 1;
-
-        if (num < RED_APPLE_PERCENTAGE)
-            apple = new RedApple(fieldDimensions, snake, cellsRadius);
-        else if (RED_APPLE_PERCENTAGE <= num && num < RED_APPLE_PERCENTAGE + YELLOW_APPLE_PERCENTAGE)
-            apple = new YellowApple(fieldDimensions, snake, cellsRadius);
-        else
-            apple = new GreenApple(fieldDimensions, snake, cellsRadius);
-    }
-
     /**
      * Game update method.
      */
@@ -212,6 +205,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
                 // check if snake ate apple
                 checkIfSnakeAteApple();
+
+                // update special element
+                updateSpecialElement();
             } else {
                 // if high score hasn't been updated
                 if (!highScoreUpdated) {
@@ -290,27 +286,80 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             snake.setDirection(Direction.LEFT);
     }
 
+    private void generateNewApple() {
+        Random random = new Random();
+        int num = random.nextInt(100) + 1;
+
+        if (num <= RED_APPLE_PERCENTAGE)
+            apple = new RedApple(fieldDimensions, snake, cellsRadius);
+        else if (RED_APPLE_PERCENTAGE < num && num <= RED_APPLE_PERCENTAGE + YELLOW_APPLE_PERCENTAGE)
+            apple = new YellowApple(fieldDimensions, snake, cellsRadius);
+        else
+            apple = new GreenApple(fieldDimensions, snake, cellsRadius);
+    }
+
+    private void updateSpecialElement() {
+        // if no special element exists
+        if (specialElement == null) {
+            Random random = new Random();
+            int num = random.nextInt(100) + 1;
+
+            if (num <= CLOCK_PERCENTAGE)
+                specialElement = new Clock(fieldDimensions, snake, cellsRadius);
+            else if (CLOCK_PERCENTAGE < num && num <= CLOCK_PERCENTAGE + SHIELD_PERCENTAGE)
+                specialElement = new Shield(fieldDimensions, snake, cellsRadius);
+        } else if (snake.ate(specialElement)) {
+            switch (specialElement.getType()) {
+                case CLOCK:
+                    snake.startClock();
+                    Log.i(TAG, "Snake got the clock");
+                    break;
+                case SHIELD:
+                    snake.setHasShield(true);
+                    Log.i(TAG, "Snake got the shield");
+                    break;
+            }
+
+            // destroy element
+            specialElement = null;
+        } else {
+            // inc duration counter
+            specialElement.incCounter();
+
+            // destroy element if it has expired
+            if (specialElement.hasExpired())
+                specialElement = null;
+        }
+    }
+
     private void checkIfSnakeHitAnyWall() {
         // get snake head location
         Point head = snake.getHead().getLocation();
 
         switch (snake.getDirection()) {
             case UP:
-                if (head.y == 1)
+                if (head.y <= 1)
                     snake.kill();
                 break;
             case DOWN:
-                if (head.y == fieldDimensions.y - 2)
+                if (head.y >= fieldDimensions.y - 2)
                     snake.kill();
                 break;
             case LEFT:
-                if (head.x == 1)
+                if (head.x <= 1)
                     snake.kill();
                 break;
             case RIGHT:
-                if (head.x == fieldDimensions.x - 2)
+                if (head.x >= fieldDimensions.x - 2)
                     snake.kill();
                 break;
+        }
+
+        if (snake.isDead() && snake.hasShield()) {
+            snake.setHasShield(false);
+            snake.revive();
+
+            Log.i(TAG, "Shield lost");
         }
     }
 
@@ -356,11 +405,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // draw apple
         drawApple(canvas);
 
-        // draw clock
-        drawCell(canvas, new Point(6, 6), clockCell);
-
-        // draw shield
-        drawCell(canvas, new Point(6, 10), shieldCell);
+        // draw special element
+        drawSpecialElement(canvas);
 
         // draw snake
         drawSnake(canvas);
@@ -428,10 +474,24 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         drawCell(canvas, apple.getLocation(), bitmap);
     }
 
+    private void drawSpecialElement(Canvas canvas) {
+        if (specialElement != null) {
+            if (specialElement.getType() == GameElement.GameElementType.CLOCK)
+                // draw clock
+                drawCell(canvas, specialElement.getLocation(), clockCell);
+            else if (specialElement.getType() == GameElement.GameElementType.SHIELD)
+                // draw shield
+                drawCell(canvas, specialElement.getLocation(), shieldCell);
+        }
+    }
+
     private void drawSnake(Canvas canvas) {
         if (snake.isUsingBitmaps()) {
             for (Cell cell : snake.getCells())
-                drawCell(canvas, cell.getLocation(), snakeCell);
+                if (snake.hasShield())
+                    drawCell(canvas, cell.getLocation(), snakeShieldedCell);
+                else
+                    drawCell(canvas, cell.getLocation(), snakeCell);
         } else {
             paint.setColor(Color.BLACK);
 
@@ -446,7 +506,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawScore(Canvas canvas) {
-        String[] text = new String[]{"Best: " + highScore, "Score: " + snake.getScore()};
+        String[] text;
+        if (snake.getSlowedTimeRemaining() == 0)
+            text = new String[]{"Best: " + highScore,
+                    "Score: " + snake.getScore()};
+        else
+            text = new String[]{"Best: " + highScore,
+                    "Score: " + snake.getScore(),
+                    "Clock: " + snake.getSlowedTimeRemaining()};
 
         int textSize = 3 * cellsDiameter / 2;
         int leftPadding = cellsDiameter + textSize / 4;
@@ -463,7 +530,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         String[] text = new String[]{"Game Over.", "Click to restart."};
 
         int textSize = 3 * cellsDiameter / 2;
-        int leftPadding = textSize / 4;
+        int leftPadding = cellsDiameter + textSize / 4;
         int topPadding = textSize * 5;
 
         for (int i = 0; i < text.length; i++) {

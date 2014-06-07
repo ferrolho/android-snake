@@ -6,11 +6,14 @@ import android.util.Log;
 import java.util.ArrayDeque;
 
 public class Snake {
+    private static final String TAG = GamePanel.class.getSimpleName();
+
     /**
      * Number of speed steps.
      * Speed will be increased in equal steps until full speed is not reached.
      */
-    private final static int SPEED_STEPS = 30;
+    private final static int SPEED_STEPS = 3;
+    private final static int SLOWED_TIME_MOVE_DELAY = MainThread.getMaxFps() / 4;
 
     private ArrayDeque<Cell> cells;
     private Cell previousTail;
@@ -19,6 +22,14 @@ public class Snake {
     private double finalMoveDelay;
     private double moveDelay, moveDelayInc;
     private boolean speedNeedsToBeIncremented;
+
+    // clock stuff
+    private boolean timeSlowed = false;
+    private double savedDelay;
+    private int clockCounter;
+
+    // shield stuff
+    private boolean hasShield = false;
 
     private Direction direction;
     private int life;
@@ -36,7 +47,7 @@ public class Snake {
         cells.addLast(new Cell(2, 2, radius));
         cells.addLast(new Cell(1, 2, radius));
 
-        double initialMoveDelay = moveDelay = MainThread.getMaxFps() / 4;
+        double initialMoveDelay = moveDelay = SLOWED_TIME_MOVE_DELAY;
         finalMoveDelay = initialMoveDelay / 3;
         moveDelayInc = (initialMoveDelay - finalMoveDelay) / SPEED_STEPS;
         speedNeedsToBeIncremented = false;
@@ -68,24 +79,35 @@ public class Snake {
                 break;
         }
 
-        // log head current location
-        head = getHead().getLocation();
-        Log.v("Snake", "Head at: " + head.x + ", " + head.y);
-
         // remove last cell and temporarily save it
         previousTail = cells.removeLast();
 
         checkIfAteItself();
+
+        // update clock counter
+        if (timeSlowed) {
+            clockCounter--;
+
+            if (clockCounter == 0) {
+                timeSlowed = false;
+                moveDelay = savedDelay;
+                Log.i(TAG, "Time resumed to normal speed");
+            }
+        }
     }
 
     private void checkIfAteItself() {
         for (Cell cell : cells)
             if (cell != getHead() && cell.getLocation().equals(getHead().getLocation()))
-                kill();
+                if (hasShield()) {
+                    setHasShield(false);
+                    Log.i(TAG, "Shield lost");
+                } else
+                    kill();
     }
 
-    public boolean ate(Apple apple) {
-        return getHead().getLocation().equals(apple.getLocation());
+    public boolean ate(GameElement element) {
+        return getHead().getLocation().equals(element.getLocation());
     }
 
     public void incSize() {
@@ -97,7 +119,7 @@ public class Snake {
     }
 
     public Cell getHead() {
-        return cells.getFirst();
+        return cells.peekFirst();
     }
 
     public Direction getDirection() {
@@ -129,12 +151,37 @@ public class Snake {
     }
 
     public void increaseSpeed() {
-        moveDelay -= moveDelayInc;
+        if (!timeSlowed) {
+            moveDelay -= moveDelayInc;
 
-        if (moveDelay < finalMoveDelay)
-            moveDelay = finalMoveDelay;
+            if (moveDelay < finalMoveDelay)
+                moveDelay = finalMoveDelay;
 
-        speedNeedsToBeIncremented = false;
+            speedNeedsToBeIncremented = false;
+        }
+    }
+
+    public void startClock() {
+        if (!timeSlowed)
+            savedDelay = moveDelay;
+        moveDelay = SLOWED_TIME_MOVE_DELAY;
+
+        clockCounter = Clock.getEffectDuration();
+        timeSlowed = true;
+
+        Log.i(TAG, "Time slowed down");
+    }
+
+    public int getSlowedTimeRemaining() {
+        return clockCounter;
+    }
+
+    public void setHasShield(boolean hasShield) {
+        this.hasShield = hasShield;
+    }
+
+    public boolean hasShield() {
+        return hasShield;
     }
 
     public boolean isDead() {
@@ -143,6 +190,10 @@ public class Snake {
 
     public void kill() {
         life = 0;
+    }
+
+    public void revive() {
+        life = 100;
     }
 
     public int getScore() {
