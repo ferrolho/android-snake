@@ -24,37 +24,11 @@ public class MainActivity extends ActionBarActivity {
         // make it full screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        /*
-        //setContentView(R.layout.activity_main);
-
-        // set our GamePanel as the View
-        FrameLayout gamePanel = (FrameLayout) findViewById(R.id.gamePanel);
-        gamePanel.addView(new GamePanel(this));
-        */
-
         gamePanel = new GamePanel(this);
         setContentView(gamePanel);
 
         Log.d(TAG, "View added");
     }
-
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-    */
 
     @Override
     public void onRestart() {
@@ -71,17 +45,5 @@ public class MainActivity extends ActionBarActivity {
         Log.d(TAG, "Pausing...");
         MainThread.setRunning(false);
         super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "Stopping...");
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.d(TAG, "Destroying...");
-        super.onDestroy();
     }
 }
