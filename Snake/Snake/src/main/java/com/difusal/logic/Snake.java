@@ -12,7 +12,7 @@ public class Snake {
      * Number of speed steps.
      * Speed will be increased in equal steps until full speed is not reached.
      */
-    private final static int SPEED_STEPS = 3;
+    private final static int SPEED_STEPS = 30;
     private final static int SLOWED_TIME_MOVE_DELAY = MainThread.getMaxFps() / 4;
 
     private ArrayDeque<Cell> cells;
