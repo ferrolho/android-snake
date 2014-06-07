@@ -2,11 +2,11 @@ apply plugin: 'android'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.0.3"
+    buildToolsVersion "19.1.0"
 
     defaultConfig {
         packageName "com.difusal.snake"
-        minSdkVersion 11
+        minSdkVersion 8
         targetSdkVersion 19
         versionCode 1
         versionName "1.0"
