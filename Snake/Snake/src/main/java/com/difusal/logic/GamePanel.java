@@ -45,6 +45,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
     private Bitmap borderCell, snakeCell;
     private Bitmap greenAppleCell, redAppleCell, yellowAppleCell;
+    private Bitmap clockCell, shieldCell;
 
     public GamePanel(Context context) {
         super(context);
@@ -102,9 +103,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private void loadBitmaps() {
         borderCell = BitmapFactory.decodeResource(getResources(), R.drawable.border_cell);
         snakeCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_cell);
+
         greenAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.green_apple_cell);
         redAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.red_apple_cell);
         yellowAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_apple_cell);
+
+        clockCell = BitmapFactory.decodeResource(getResources(), R.drawable.clock_cell);
+        shieldCell = BitmapFactory.decodeResource(getResources(), R.drawable.shield_cell);
     }
 
     /**
@@ -350,6 +355,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         // draw apple
         drawApple(canvas);
+
+        // draw clock
+        drawCell(canvas, new Point(6, 6), clockCell);
+
+        // draw shield
+        drawCell(canvas, new Point(6, 10), shieldCell);
 
         // draw snake
         drawSnake(canvas);
