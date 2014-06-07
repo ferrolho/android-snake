@@ -165,7 +165,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // increment tick counter
         tickCounter++;
 
-        // if snake is alive
+        // update clock counter
+        if (tickCounter % MainThread.getFps() == 0)
+            snake.updateClock();
+
+        // update snake
         if (tickCounter % snake.getMoveDelay() == 0) {
             // increase snake speed if needed
             if (snake.speedNeedsToBeIncremented())
@@ -199,6 +203,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             // check if snake hit any wall
             checkIfSnakeHitAnyWall();
 
+            // if snake is alive
             if (!snake.isDead()) {
                 // move the snake
                 snake.move();
@@ -521,7 +526,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         for (int i = 0; i < text.length; i++) {
             paint.setTextSize(textSize);
-            paint.setColor(Color.rgb(150, 0, 150));
+
+            if (snake.isDead())
+                paint.setColor(Color.YELLOW);
+            else
+                paint.setColor(Color.rgb(150, 0, 150));
+
             canvas.drawText(text[i], leftPadding, topPadding + (i + 1) * textSize, paint);
         }
     }
@@ -531,14 +541,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
 
         int textSize = 3 * cellsDiameter / 2;
         int leftPadding = cellsDiameter + textSize / 4;
-        int topPadding = getHeight() / 2 + cellsDiameter * text.length;
+        int topPadding = getHeight() / 2 - text.length * textSize;
 
         for (int i = 0; i < text.length; i++) {
             paint.setTextSize(textSize);
-            paint.setColor(Color.BLACK);
-            canvas.drawText(text[i], leftPadding + 2, (i + 1) * textSize + topPadding + 2, paint);
             paint.setColor(Color.YELLOW);
-            canvas.drawText(text[i], leftPadding, (i + 1) * textSize + topPadding, paint);
+            canvas.drawText(text[i], leftPadding, topPadding + (i + 1) * textSize, paint);
         }
     }
 }

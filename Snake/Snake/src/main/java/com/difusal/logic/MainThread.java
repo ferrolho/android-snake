@@ -12,17 +12,17 @@ public class MainThread extends Thread {
     private static final String TAG = MainThread.class.getSimpleName();
 
     // desired fps
-    private final static int MAX_FPS = 50;
+    private final static int FPS = 50;
 
-    public static int getMaxFps() {
-        return MAX_FPS;
+    public static int getFps() {
+        return FPS;
     }
 
     // maximum number of frames to be skipped
     private final static int MAX_FRAME_SKIPS = 5;
 
     // the frame period
-    private final static int FRAME_PERIOD = 1000 / MAX_FPS;
+    private final static int FRAME_PERIOD = 1000 / FPS;
 
     // Surface holder that can access the physical surface
     private final SurfaceHolder surfaceHolder;

@@ -13,7 +13,7 @@ public class Snake {
      * Speed will be increased in equal steps until full speed is not reached.
      */
     private final static int SPEED_STEPS = 30;
-    private final static int SLOWED_TIME_MOVE_DELAY = MainThread.getMaxFps() / 4;
+    private final static int SLOWED_TIME_MOVE_DELAY = MainThread.getFps() / 4;
 
     private ArrayDeque<Cell> cells;
     private Cell previousTail;
@@ -83,17 +83,6 @@ public class Snake {
         previousTail = cells.removeLast();
 
         checkIfAteItself();
-
-        // update clock counter
-        if (timeSlowed) {
-            clockCounter--;
-
-            if (clockCounter == 0) {
-                timeSlowed = false;
-                moveDelay = savedDelay;
-                Log.i(TAG, "Time resumed to normal speed");
-            }
-        }
     }
 
     private void checkIfAteItself() {
@@ -170,6 +159,18 @@ public class Snake {
         timeSlowed = true;
 
         Log.i(TAG, "Time slowed down");
+    }
+
+    public void updateClock() {
+        if (timeSlowed) {
+            clockCounter--;
+
+            if (clockCounter == 0) {
+                timeSlowed = false;
+                moveDelay = savedDelay;
+                Log.i(TAG, "Time resumed to normal speed");
+            }
+        }
     }
 
     public int getSlowedTimeRemaining() {

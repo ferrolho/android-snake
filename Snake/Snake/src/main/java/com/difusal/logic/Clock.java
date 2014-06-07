@@ -9,8 +9,8 @@ public class Clock extends SpecialElement {
     // maximum duration to display clock in snake moves
     private static final int MAX_DURATION = 20;
 
-    // effect duration in snake moves
-    private static final int EFFECT_DURATION = 50;
+    // effect duration in seconds
+    private static final int EFFECT_DURATION = 10;
 
     public Clock(Point fieldDimensions, Snake snake, int radius) {
         super(fieldDimensions, snake, radius, MAX_DURATION);
