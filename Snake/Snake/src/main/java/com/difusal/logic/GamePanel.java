@@ -20,9 +20,13 @@ import com.difusal.snake.R;
 import com.difusal.snake.SwipeInterface;
 
 import java.util.ArrayDeque;
+import java.util.Random;
 
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, SwipeInterface {
     private static final String TAG = GamePanel.class.getSimpleName();
+
+    private static final int RED_APPLE_PERCENTAGE = 20;
+    private static final int YELLOW_APPLE_PERCENTAGE = 5;
 
     private Context context;
     private MainThread thread;
@@ -39,7 +43,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private long highScore;
     private boolean highScoreUpdated;
 
-    private Bitmap borderCell, snakeCell, appleCell;
+    private Bitmap borderCell, snakeCell;
+    private Bitmap greenAppleCell, redAppleCell, yellowAppleCell;
 
     public GamePanel(Context context) {
         super(context);
@@ -97,7 +102,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     private void loadBitmaps() {
         borderCell = BitmapFactory.decodeResource(getResources(), R.drawable.border_cell);
         snakeCell = BitmapFactory.decodeResource(getResources(), R.drawable.snake_cell);
-        appleCell = BitmapFactory.decodeResource(getResources(), R.drawable.apple_cell);
+        greenAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.green_apple_cell);
+        redAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.red_apple_cell);
+        yellowAppleCell = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_apple_cell);
     }
 
     /**
@@ -124,11 +131,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         Log.d("MainActivity", "Field Dimensions: " + fieldWidth + "x" + fieldHeight);
 
         // create snake
-        snake = new Snake(cellsRadius, (borderCell != null && snakeCell != null && appleCell != null));
-        //snake = new Snake(cellsRadius, false);
+        snake = new Snake(cellsRadius, (borderCell != null && snakeCell != null && greenAppleCell != null));
 
         // create apple
-        apple = new GreenApple(fieldDimensions, snake, cellsRadius);
+        generateNewApple();
 
         // reset highScoreUpdated flag
         highScoreUpdated = false;
@@ -140,6 +146,18 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
         // create and start the game loop thread
         thread = new MainThread(getHolder(), this);
         thread.start();
+    }
+
+    private void generateNewApple() {
+        Random random = new Random();
+        int num = random.nextInt(100) + 1;
+
+        if (num < RED_APPLE_PERCENTAGE)
+            apple = new RedApple(fieldDimensions, snake, cellsRadius);
+        else if (RED_APPLE_PERCENTAGE <= num && num < RED_APPLE_PERCENTAGE + YELLOW_APPLE_PERCENTAGE)
+            apple = new YellowApple(fieldDimensions, snake, cellsRadius);
+        else
+            apple = new GreenApple(fieldDimensions, snake, cellsRadius);
     }
 
     /**
@@ -302,7 +320,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
             snake.enableSpeedNeedsToBeIncrementedFlag();
 
             // generate new apple
-            apple.newRandomLocation(fieldDimensions, snake);
+            generateNewApple();
 
             // update score
             snake.incScore(apple.getScore());
@@ -379,7 +397,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback, Sw
     }
 
     private void drawApple(Canvas canvas) {
-        drawCell(canvas, apple.getLocation(), appleCell);
+        Bitmap bitmap = null;
+
+        switch (apple.getColor()) {
+            case Color.GREEN:
+                bitmap = greenAppleCell;
+                break;
+            case Color.RED:
+                bitmap = redAppleCell;
+                break;
+            case Color.YELLOW:
+                bitmap = yellowAppleCell;
+                break;
+        }
+
+        drawCell(canvas, apple.getLocation(), bitmap);
     }
 
     private void drawSnake(Canvas canvas) {

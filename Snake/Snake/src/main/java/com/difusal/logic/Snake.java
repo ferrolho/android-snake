@@ -150,6 +150,7 @@ public class Snake {
     }
 
     public void incScore(int score) {
+        Log.d("Snake", "Current score: " + this.score + " + " + score);
         this.score += score;
     }
 
